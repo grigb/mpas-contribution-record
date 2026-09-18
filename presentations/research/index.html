@@ -1,0 +1,768 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>MPAS research — 2026-08-31 historical edition</title>
+    <script src="../vendor/gsap.min.js"></script>
+    <script src="../vendor/hyperframe.runtime.iife.js"></script>
+    <style>
+      @font-face {
+        font-family: "SFMono-Regular";
+        src: local("SF Mono Regular");
+      }
+      :root {
+        --bg: #07131c;
+        --bg-deep: #041018;
+        --panel: #0e212c;
+        --panel-soft: #112a36;
+        --ink: #f4f8f7;
+        --muted: #a8bec6;
+        --line: #294653;
+        --cyan: #5ee0cb;
+        --blue: #75aefc;
+        --amber: #f0bd68;
+        --red: #ff837c;
+        --green: #79d6a5;
+      }
+
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      html, body {
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: "Avenir Next", Avenir, "Helvetica Neue", Arial, sans-serif;
+      }
+      body {
+        background:
+          radial-gradient(circle at 86% 12%, rgba(94, 224, 203, 0.11), transparent 32%),
+          radial-gradient(circle at 8% 94%, rgba(117, 174, 252, 0.10), transparent 35%),
+          var(--bg);
+      }
+      code { font-family: "SFMono-Regular", Consolas, monospace; color: var(--cyan); }
+      strong { font-weight: 700; }
+
+      .deck-root, .scene { position: relative; width: 1920px; height: 1080px; overflow: hidden; }
+      .scene { position: absolute; inset: 0; }
+      .slide-shell {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        padding: 54px 78px 48px;
+        display: flex;
+        flex-direction: column;
+      }
+      .root-chrome {
+        position: absolute;
+        z-index: 20;
+        top: 54px;
+        left: 78px;
+        right: 78px;
+        height: 42px;
+        display: flex;
+        align-items: center;
+        gap: 26px;
+        pointer-events: none;
+        color: var(--muted);
+        font-size: 22px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      .slide-chrome {
+        position: relative;
+        z-index: 3;
+        height: 42px;
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        color: var(--muted);
+        font-size: 22px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      .wordmark { color: var(--ink); font-weight: 800; font-size: 26px; letter-spacing: 0.16em; }
+      .deck-id { border-left: 1px solid var(--line); padding-left: 26px; }
+      .slide-count { color: var(--cyan); font-variant-numeric: tabular-nums; }
+      .slide-title {
+        position: relative;
+        z-index: 2;
+        max-width: 1500px;
+        margin-top: 42px;
+        color: var(--ink);
+        font-size: 70px;
+        line-height: 1.06;
+        letter-spacing: -0.038em;
+        text-wrap: balance;
+      }
+      .slide-content { position: relative; z-index: 2; flex: 1; min-height: 0; margin-top: 38px; }
+      .deck-footer {
+        position: relative;
+        z-index: 2;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        color: var(--muted);
+        font-size: 19px;
+      }
+      .deck-footer > span { height: 1px; flex: 1; background: var(--line); }
+      .deck-footer strong { color: var(--ink); letter-spacing: 0.03em; }
+      .deck-footer em { font-style: normal; }
+      .root-footer {
+        position: absolute;
+        z-index: 20;
+        left: 78px;
+        right: 78px;
+        bottom: 48px;
+        pointer-events: none;
+      }
+      .footer-spacer { height: 32px; flex: 0 0 32px; }
+      .hf-animate { opacity: 1; }
+
+      .hero-layout { height: 100%; display: grid; grid-template-columns: 1.07fr 0.93fr; gap: 72px; align-items: center; }
+      .hero-copy { align-self: center; }
+      .hero-title {
+        max-width: 950px;
+        font-size: 94px;
+        line-height: 0.99;
+        letter-spacing: -0.04em;
+        text-wrap: balance;
+      }
+      .hero-subtitle { max-width: 870px; margin-top: 38px; color: var(--muted); font-size: 39px; line-height: 1.25; }
+      .hero-meta { margin-top: 42px; display: flex; gap: 18px; flex-wrap: wrap; }
+      .hero-meta span { padding: 12px 18px; border: 1px solid var(--line); color: var(--ink); font-size: 23px; }
+      .action-rig { position: relative; min-height: 660px; display: flex; align-items: center; justify-content: center; }
+      .action-rig::before {
+        content: "";
+        position: absolute;
+        inset: 60px 20px;
+        border: 1px solid var(--line);
+        clip-path: polygon(0 12%, 86% 0, 100% 70%, 18% 100%);
+        background: rgba(14, 33, 44, 0.52);
+      }
+      .rig-label { position: absolute; top: 86px; left: 74px; color: var(--cyan); font-size: 22px; text-transform: uppercase; letter-spacing: 0.12em; }
+      .exact-action {
+        position: relative;
+        width: 300px;
+        height: 300px;
+        border-radius: 50%;
+        border: 2px solid var(--cyan);
+        display: grid;
+        place-content: center;
+        text-align: center;
+        background: radial-gradient(circle, rgba(94, 224, 203, 0.16), rgba(7, 19, 28, 0.78) 67%);
+        box-shadow: 20px 28px 70px rgba(0, 0, 0, 0.35);
+      }
+      .exact-action::before, .exact-action::after { content: ""; position: absolute; border: 1px solid rgba(94, 224, 203, 0.35); border-radius: 50%; }
+      .exact-action::before { inset: -44px; }
+      .exact-action::after { inset: -92px; border-style: dashed; }
+      .exact-action span { color: var(--muted); font-size: 24px; letter-spacing: 0.2em; }
+      .exact-action strong { color: var(--ink); font-size: 56px; letter-spacing: -0.035em; }
+      .action-track { position: absolute; left: 34px; right: 34px; bottom: 48px; display: flex; justify-content: space-between; }
+      .action-track::before { content: ""; position: absolute; left: 20px; right: 20px; top: 8px; height: 2px; background: linear-gradient(90deg, var(--blue), var(--cyan)); }
+      .action-stage { position: relative; display: grid; justify-items: center; gap: 10px; color: var(--muted); font-size: 19px; }
+      .action-stage i { width: 16px; height: 16px; border-radius: 50%; background: var(--cyan); }
+
+      .flow-map { height: 560px; display: grid; grid-template-columns: repeat(6, 1fr); align-items: center; gap: 20px; }
+      .flow-node { position: relative; min-height: 350px; padding: 34px 24px; border-top: 3px solid var(--cyan); border-bottom: 1px solid var(--line); background: rgba(14, 33, 44, 0.72); }
+      .flow-node:not(:last-child)::after { content: ""; position: absolute; right: -19px; top: 50%; width: 18px; height: 18px; border-top: 2px solid var(--cyan); border-right: 2px solid var(--cyan); transform: rotate(45deg); }
+      .flow-index { color: var(--cyan); font-size: 20px; letter-spacing: 0.12em; }
+      .flow-node strong { display: block; margin-top: 72px; font-size: 35px; }
+      .flow-node p { margin-top: 20px; color: var(--muted); font-size: 27px; line-height: 1.28; }
+
+      .participant-system { height: 570px; display: grid; grid-template-columns: 1.25fr 0.75fr; gap: 80px; align-items: center; }
+      .participant-orbit { position: relative; width: 840px; height: 560px; }
+      .orbit-ring { position: absolute; inset: 38px 92px; border: 1px solid var(--line); border-radius: 50%; }
+      .orbit-core { position: absolute; left: 310px; top: 185px; width: 220px; height: 190px; display: grid; place-content: center; text-align: center; border: 2px solid var(--cyan); border-radius: 50%; background: var(--panel); box-shadow: 18px 22px 60px rgba(0, 0, 0, 0.32); }
+      .orbit-core strong { font-size: 54px; }
+      .orbit-core span { color: var(--cyan); font-size: 22px; letter-spacing: 0.1em; text-transform: uppercase; }
+      .participant { position: absolute; min-width: 176px; padding: 15px 20px; border: 1px solid var(--line); background: rgba(7, 19, 28, 0.92); color: var(--ink); font-size: 27px; text-align: center; }
+      .p1 { left: 332px; top: 16px; } .p2 { right: 6px; top: 128px; } .p3 { right: 20px; bottom: 92px; }
+      .p4 { left: 330px; bottom: 6px; } .p5 { left: 10px; bottom: 92px; } .p6 { left: 0; top: 128px; }
+      .integration-rail { display: grid; gap: 30px; }
+      .integration-path { padding: 30px 0; border-top: 1px solid var(--line); }
+      .integration-path span { display: block; color: var(--cyan); font-size: 20px; text-transform: uppercase; letter-spacing: 0.1em; }
+      .integration-path strong { display: block; margin-top: 12px; font-size: 35px; line-height: 1.16; }
+
+      .boundary-map { height: 570px; display: grid; grid-template-columns: 1fr 80px 1fr; grid-template-rows: 1fr auto; column-gap: 26px; }
+      .boundary-side { padding: 34px 46px; background: rgba(14, 33, 44, 0.7); }
+      .protocol-side { border-top: 4px solid var(--cyan); } .product-side { border-top: 4px solid var(--blue); }
+      .side-label { color: var(--muted); font-size: 22px; text-transform: uppercase; letter-spacing: 0.1em; }
+      .boundary-side ul { list-style: none; margin-top: 46px; }
+      .boundary-side li { padding: 20px 0; border-top: 1px solid var(--line); font-size: 36px; line-height: 1.17; }
+      .boundary-divider { position: relative; display: grid; place-items: center; }
+      .boundary-divider::before { content: ""; position: absolute; top: 0; bottom: 0; width: 1px; background: var(--line); }
+      .boundary-divider span { position: relative; padding: 12px; background: var(--bg); color: var(--amber); font-size: 38px; }
+      .beyond-row { grid-column: 1 / -1; display: grid; grid-template-columns: 260px 1fr; gap: 24px; padding: 22px 30px; border: 1px solid var(--line); border-top: none; }
+      .beyond-row strong { color: var(--amber); font-size: 26px; } .beyond-row span { color: var(--muted); font-size: 27px; }
+
+      .conjunction-map { position: relative; height: 470px; }
+      .conjunction-core { position: absolute; left: 50%; top: 50%; width: 330px; height: 210px; transform: translate(-50%, -50%); border: 2px solid var(--cyan); display: grid; place-content: center; text-align: center; background: var(--panel); z-index: 2; }
+      .conjunction-core span { color: var(--cyan); font-size: 23px; } .conjunction-core strong { margin-top: 10px; font-size: 38px; }
+      .conjunction-node { position: absolute; width: 360px; min-height: 94px; padding: 24px 28px; border-top: 2px solid var(--line); color: var(--ink); font-size: 29px; line-height: 1.16; }
+      .conjunction-node::after { content: ""; position: absolute; top: 50%; width: 110px; height: 1px; background: var(--line); }
+      .n1 { left: 0; top: 10px; } .n2 { left: 0; top: 180px; } .n3 { left: 0; bottom: 0; }
+      .n4 { right: 0; top: 10px; } .n5 { right: 0; top: 180px; } .n6 { right: 0; bottom: 0; }
+      .n1::after, .n2::after, .n3::after { right: -110px; } .n4::after, .n5::after, .n6::after { left: -110px; }
+      .slide-boundary { display: grid; grid-template-columns: 210px 1fr; gap: 24px; padding: 22px 28px; border-top: 1px solid var(--amber); color: var(--muted); font-size: 27px; line-height: 1.22; }
+      .slide-boundary strong { color: var(--amber); }
+
+      .field-map { height: 565px; display: grid; grid-template-columns: 0.83fr 1.17fr; gap: 64px; }
+      .field-column { padding-top: 26px; border-top: 4px solid var(--line); }
+      .field-column:last-child { border-top-color: var(--cyan); }
+      .field-label { color: var(--muted); font-size: 22px; text-transform: uppercase; letter-spacing: 0.1em; }
+      .field-column ul { list-style: none; margin-top: 38px; }
+      .field-column li { padding: 20px 0; border-top: 1px solid var(--line); font-size: 33px; line-height: 1.2; }
+
+      .metrics-band { height: 390px; display: grid; grid-template-columns: repeat(5, 1fr); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+      .metric { padding: 44px 30px 34px; border-right: 1px solid var(--line); } .metric:last-child { border-right: none; }
+      .metric strong { display: block; color: var(--cyan); font-size: 82px; line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: -0.04em; }
+      .metric span { display: block; margin-top: 34px; color: var(--muted); font-size: 27px; line-height: 1.22; }
+      .evidence-boundary { margin-top: 46px; font-size: 28px; }
+
+      .limits-map { height: 570px; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(2, 1fr); column-gap: 42px; row-gap: 20px; }
+      .limit-row { padding: 30px 12px 24px; border-top: 3px solid var(--line); }
+      .limit-row:nth-child(1), .limit-row:nth-child(4) { border-top-color: var(--cyan); }
+      .limit-row strong { display: block; color: var(--ink); font-size: 30px; }
+      .limit-row span { display: block; margin-top: 20px; color: var(--muted); font-size: 33px; line-height: 1.18; }
+
+      .commercial-map { height: 440px; display: grid; grid-template-columns: 0.82fr 1.18fr; gap: 40px; }
+      .commercial-side { padding: 34px 42px; background: rgba(14, 33, 44, 0.72); }
+      .verified-side { border-top: 4px solid var(--green); } .unknown-side { border-top: 4px solid var(--amber); }
+      .commercial-side > span { color: var(--muted); font-size: 22px; text-transform: uppercase; letter-spacing: 0.12em; }
+      .commercial-side ul { list-style: none; margin-top: 34px; }
+      .commercial-side li { padding: 18px 0; border-top: 1px solid var(--line); font-size: 31px; line-height: 1.18; }
+      .commercial-side li::before { content: ""; display: inline-block; width: 9px; height: 9px; margin-right: 16px; background: currentColor; transform: rotate(45deg); }
+
+      .proof-map { height: 410px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 34px; }
+      .proof-column { padding: 28px 34px; border-top: 4px solid var(--cyan); background: rgba(14, 33, 44, 0.66); }
+      .proof-column > span { color: var(--cyan); font-size: 22px; letter-spacing: 0.12em; }
+      .proof-column strong { display: block; margin-top: 58px; font-size: 39px; }
+      .proof-column p { margin-top: 20px; color: var(--muted); font-size: 30px; line-height: 1.22; }
+      .other-edges { margin-top: 34px; display: grid; grid-template-columns: 310px 1fr; gap: 26px; padding: 25px 30px; border-top: 1px solid var(--amber); }
+      .other-edges strong { color: var(--amber); font-size: 27px; } .other-edges span { color: var(--muted); font-size: 26px; line-height: 1.2; }
+
+      .position-map { height: 450px; display: grid; grid-template-columns: 1.08fr 0.92fr; gap: 50px; }
+      .position-column { padding-top: 24px; border-top: 4px solid var(--line); }
+      .safe-column { border-top-color: var(--green); } .stop-column { border-top-color: var(--red); }
+      .position-column > span { color: var(--muted); font-size: 22px; text-transform: uppercase; letter-spacing: 0.12em; }
+      .position-column ul { list-style: none; margin-top: 28px; }
+      .position-column li { padding: 14px 0 14px 26px; border-top: 1px solid var(--line); font-size: 26px; line-height: 1.18; position: relative; }
+      .position-column li::before { content: ""; position: absolute; left: 0; top: 24px; width: 9px; height: 9px; background: currentColor; transform: rotate(45deg); }
+      .safe-column li::before { color: var(--green); } .stop-column li::before { color: var(--red); }
+      .partner-question { margin-top: 26px; display: grid; grid-template-columns: 250px 1fr; gap: 28px; align-items: center; padding: 24px 30px; background: var(--cyan); color: var(--bg-deep); box-shadow: 18px 24px 64px rgba(0, 0, 0, 0.24); }
+      .partner-question strong { font-size: 26px; } .partner-question span { font-size: 30px; font-weight: 650; }
+    </style>
+  </head>
+  <body>
+    <script type="application/hyperframes-slideshow+json">
+{
+  "slides": [
+    {
+      "sceneId": "s1",
+      "notes": "SAY ▸ = read the quoted words exactly   • = keywords, say it your way   [ ] = do, don't read\n\nMPAS means Multi-Party Action Security. It describes an exact action, its approvals, deterministic verification, execution and receipt. This is the August 31 research edition, revised for public reading. It makes no production-readiness claim. If presentation playback is unavailable, use CONTENT.md.\n\n[SOURCE REFERENCES: presenter notes]\n[SRC: [Slide 1 evidence summary](EVIDENCE.md#slide-1) — dated 2026-08-31; private evidence summarized where stated.]"
+    },
+    {
+      "sceneId": "s2",
+      "notes": "SAY ▸ = read the quoted words exactly   • = keywords, say it your way   [ ] = do, don't read\n\nThe Action Package contains the execution payload, envelope and approvals. The reviewed data must remain bound to the data used at verification and execution. The deterministic verifier checks trusted inputs and policy. A receipt records the reported resolution; it does not prove external reality.\n\n[SOURCE REFERENCES: presenter notes]\n[SRC: [Slide 2 evidence summary](EVIDENCE.md#slide-2) — dated 2026-08-31; private evidence summarized where stated.]"
+    },
+    {
+      "sceneId": "s3",
+      "notes": "SAY ▸ = read the quoted words exactly   • = keywords, say it your way   [ ] = do, don't read\n\nThe protocol is broader than AI-agent use. Its signer roles can include people, agents, devices, contracts, organizations and software components. A credential adapter bridges systems that do not verify MPAS themselves. It is one integration route; native verification is preferred where available.\n\n[SOURCE REFERENCES: presenter notes]\n[SRC: [Slide 3 evidence summary](EVIDENCE.md#slide-3) — dated 2026-08-31; private evidence summarized where stated.]"
+    },
+    {
+      "sceneId": "s4",
+      "notes": "SAY ▸ = read the quoted words exactly   • = keywords, say it your way   [ ] = do, don't read\n\nMPAS can govern a proposed data-access action. Retrieval, filtering, classification, disclosure enforcement and secret storage remain separate responsibilities. The diagram describes a technical boundary, not a company product plan.\n\n[SOURCE REFERENCES: presenter notes]\n[SRC: [Slide 4 evidence summary](EVIDENCE.md#slide-4) — dated 2026-08-31; private evidence summarized where stated.]"
+    },
+    {
+      "sceneId": "s5",
+      "notes": "SAY ▸ = read the quoted words exactly   • = keywords, say it your way   [ ] = do, don't read\n\nThe opportunity identified in August was combining known controls around one exact action. It was not a claim to have invented any individual control. Policy must require distinct approvals and proposer exclusion. Different identities alone do not establish independent judgment.\n\n[SOURCE REFERENCES: presenter notes]\n[SRC: [Slide 5 evidence summary](EVIDENCE.md#slide-5) — dated 2026-08-31; private evidence summarized where stated.]"
+    },
+    {
+      "sceneId": "s6",
+      "notes": "SAY ▸ = read the quoted words exactly   • = keywords, say it your way   [ ] = do, don't read\n\nThe August review identified close comparisons and reasons more manual approval may not be valuable. It described five systems reducing or automating different parts of approval, not five identical replacements. A bounded comparison does not prove an empty category or exclude an unlocated complete implementation.\n\n[SOURCE REFERENCES: presenter notes]\n[SRC: [Slide 6 evidence summary](EVIDENCE.md#slide-6) — dated 2026-08-31; private evidence summarized where stated.]"
+    },
+    {
+      "sceneId": "s7",
+      "notes": "SAY ▸ = read the quoted words exactly   • = keywords, say it your way   [ ] = do, don't read\n\nThese are separate historical measures from the August 31 report. Do not add the test counts. Eleven findings were independently re-derived; organizing the other forty-four into thirteen repair groups did not re-audit each finding. The underlying run records remain private. No test was rerun for this edition.\n\n[SOURCE REFERENCES: presenter notes]\n[SRC: [Slide 7 evidence summary](EVIDENCE.md#slide-7) — dated 2026-08-31; private evidence summarized where stated.]"
+    },
+    {
+      "sceneId": "s8",
+      "notes": "SAY ▸ = read the quoted words exactly   • = keywords, say it your way   [ ] = do, don't read\n\nA signature authenticates a report; it cannot make the report external truth. A lost response can leave an indeterminate outcome. Counting signatures does not prove diverse control. Reusable credentials can be hidden while the agent still has bounded power to request their use. Private synthetic exercises also retained failed controls and residual information leakage.\n\n[SOURCE REFERENCES: presenter notes]\n[SRC: [Slide 8 evidence summary](EVIDENCE.md#slide-8) — dated 2026-08-31; private evidence summarized where stated.]"
+    },
+    {
+      "sceneId": "s9",
+      "notes": "SAY ▸ = read the quoted words exactly   • = keywords, say it your way   [ ] = do, don't read\n\nThe historical sources identify a repository license and an open-source project classification. Those are separate from formal-standard status, certification or demand. The August research corpus lacked verified buyer evidence. This does not decide whether evidence arose later, and it does not interpret a private arrangement.\n\n[SOURCE REFERENCES: presenter notes]\n[SRC: [Slide 9 evidence summary](EVIDENCE.md#slide-9) — dated 2026-08-31; private evidence summarized where stated.]"
+    },
+    {
+      "sceneId": "s10",
+      "notes": "SAY ▸ = read the quoted words exactly   • = keywords, say it your way   [ ] = do, don't read\n\nThe protocol’s credibility does not answer these deployment questions. Separate identities can still share control. A valid approval can still be uninformed. Buildable code can still fail independent security or operational review.\n\n[SOURCE REFERENCES: presenter notes]\n[SRC: [Slide 10 evidence summary](EVIDENCE.md#slide-10) — dated 2026-08-31; private evidence summarized where stated.]"
+    },
+    {
+      "sceneId": "s11",
+      "notes": "SAY ▸ = read the quoted words exactly   • = keywords, say it your way   [ ] = do, don't read\n\nKeep the protocol definition, the historical research inference and private test reports distinct. None establishes production use, formal-standard status or demand. The closing question concerns missing evidence; it is not a company roadmap or an outreach commitment.\n\n[SOURCE REFERENCES: presenter notes]\n[SRC: [Slide 11 evidence summary](EVIDENCE.md#slide-11) — dated 2026-08-31; private evidence summarized where stated.]"
+    }
+  ]
+}
+    </script>
+    <main id="root" class="deck-root" data-composition-id="main" data-start="0"
+          data-duration="88" data-width="1920" data-height="1080">
+      <div class="root-chrome">
+        <span class="wordmark">MPAS</span>
+        <span class="deck-id">Research · 2026-08-31</span>
+      </div>
+      <section id="s1" class="scene clip layout-hero"
+               data-composition-id="s1" data-start="0"
+               data-duration="8" data-label="MPAS carries an exact action from proposal to receipt">
+        <div class="slide-shell">
+          <div class="slide-chrome">
+          <span class="slide-count">01 / 11</span>
+        </div>
+          <div class="slide-content"><div class="hero-layout">
+          <div class="hero-copy">
+            <h1 class="hero-title hf-animate">MPAS carries an exact action from proposal to receipt</h1>
+            <p class="hero-subtitle hf-animate">Multi-Party Action Security: what the research supports, disproves, and leaves open</p>
+            <div class="hero-meta hf-animate"><span>Research briefing · 2026-08-31</span><span>Historical research edition</span></div>
+          </div>
+          <div class="action-rig" aria-label="Proposal → approval → verification → execution → receipt">
+            <span class="rig-label hf-animate">Action path</span>
+            <div class="exact-action hf-animate"><span>EXACT</span><strong>ACTION</strong></div>
+            <div class="action-track"><span class="action-stage hf-animate"><i></i>Proposal</span><span class="action-stage hf-animate"><i></i>approval</span><span class="action-stage hf-animate"><i></i>verification</span><span class="action-stage hf-animate"><i></i>execution</span><span class="action-stage hf-animate"><i></i>receipt</span></div>
+          </div>
+        </div></div>
+          <div class="footer-spacer" aria-hidden="true"></div>
+        </div>
+        <script>
+          (function () {
+            window.__timelines = window.__timelines || {};
+            var tl = gsap.timeline({ paused: true });
+            tl.fromTo("#s1 .hero-title",
+              { opacity: 0, y: 24, clipPath: "inset(0 0 100% 0)" },
+              { opacity: 1, y: 0, clipPath: "inset(0 0 0% 0)", duration: 0.65, ease: "expo.out" }, 0.08);
+            tl.fromTo("#s1 .hero-subtitle, .hero-meta, .rig-label",
+              { opacity: 0, y: 30, scale: 0.97 },
+              { opacity: 1, y: 0, scale: 1, duration: 0.58, ease: "power3.out", stagger: 0.09 }, 0.22);
+            tl.fromTo("#s1 .exact-action, .action-stage",
+              { opacity: 0, y: 18 },
+              { opacity: 1, y: 0, duration: 0.5, ease: "power3.out", stagger: 0.08 }, 0.48);
+            window.__timelines["s1"] = tl;
+          })();
+        </script>
+      </section>
+
+      <section id="s2" class="scene clip layout-flow"
+               data-composition-id="s2" data-start="8"
+               data-duration="8" data-label="The Action Package keeps review tied to what will execute">
+        <div class="slide-shell">
+          <div class="slide-chrome">
+          <span class="slide-count">02 / 11</span>
+        </div>
+          <h1 class="slide-title hf-animate">The Action Package keeps review tied to what will execute</h1>
+          <div class="slide-content"><div class="flow-map"><div class="flow-node hf-animate">
+              <span class="flow-index">01</span>
+              <strong>Payload</strong>
+              <p>The exact command, request, transaction, or instruction</p>
+            </div><div class="flow-node hf-animate">
+              <span class="flow-index">02</span>
+              <strong>Envelope</strong>
+              <p>The target and payload hash</p>
+            </div><div class="flow-node hf-animate">
+              <span class="flow-index">03</span>
+              <strong>Approvals</strong>
+              <p>Signed decisions bound to the envelope</p>
+            </div><div class="flow-node hf-animate">
+              <span class="flow-index">04</span>
+              <strong>Verifier</strong>
+              <p>Deterministic policy check</p>
+            </div><div class="flow-node hf-animate">
+              <span class="flow-index">05</span>
+              <strong>Execution</strong>
+              <p>The committed payload runs</p>
+            </div><div class="flow-node hf-animate">
+              <span class="flow-index">06</span>
+              <strong>Receipt</strong>
+              <p>The resolution is recorded</p>
+            </div></div></div>
+          <div class="footer-spacer" aria-hidden="true"></div>
+        </div>
+        <script>
+          (function () {
+            window.__timelines = window.__timelines || {};
+            var tl = gsap.timeline({ paused: true });
+            tl.fromTo("#s2 .slide-title",
+              { opacity: 0, y: 24, clipPath: "inset(0 0 100% 0)" },
+              { opacity: 1, y: 0, clipPath: "inset(0 0 0% 0)", duration: 0.65, ease: "expo.out" }, 0.08);
+            tl.fromTo("#s2 .flow-node",
+              { opacity: 0, y: 30, scale: 0.97 },
+              { opacity: 1, y: 0, scale: 1, duration: 0.58, ease: "power3.out", stagger: 0.09 }, 0.22);
+            tl.fromTo("#s2 .flow-node:last-child",
+              { opacity: 0, y: 18 },
+              { opacity: 1, y: 0, duration: 0.5, ease: "power3.out", stagger: 0.08 }, 0.48);
+            window.__timelines["s2"] = tl;
+          })();
+        </script>
+      </section>
+
+      <section id="s3" class="scene clip layout-participants"
+               data-composition-id="s3" data-start="16"
+               data-duration="8" data-label="MPAS governs consequential actions across more than AI agents">
+        <div class="slide-shell">
+          <div class="slide-chrome">
+          <span class="slide-count">03 / 11</span>
+        </div>
+          <h1 class="slide-title hf-animate">MPAS governs consequential actions across more than AI agents</h1>
+          <div class="slide-content"><div class="participant-system">
+          <div class="participant-orbit">
+            <div class="orbit-ring"></div>
+            <div class="orbit-core hf-animate"><strong>MPAS</strong><span>Signer</span></div>
+            <span class="participant hf-animate p1">Human</span><span class="participant hf-animate p2">Agent</span><span class="participant hf-animate p3">Device</span><span class="participant hf-animate p4">Contract</span><span class="participant hf-animate p5">Organization</span><span class="participant hf-animate p6">Software component</span>
+          </div>
+          <div class="integration-rail"><div class="integration-path hf-animate">
+              <span>Preferred integration</span>
+              <strong>Native MPAS verification</strong>
+            </div><div class="integration-path hf-animate">
+              <span>Optional bridge</span>
+              <strong>Credential Adapter</strong>
+            </div></div>
+        </div></div>
+          <div class="footer-spacer" aria-hidden="true"></div>
+        </div>
+        <script>
+          (function () {
+            window.__timelines = window.__timelines || {};
+            var tl = gsap.timeline({ paused: true });
+            tl.fromTo("#s3 .slide-title",
+              { opacity: 0, y: 24, clipPath: "inset(0 0 100% 0)" },
+              { opacity: 1, y: 0, clipPath: "inset(0 0 0% 0)", duration: 0.65, ease: "expo.out" }, 0.08);
+            tl.fromTo("#s3 .orbit-core, .participant",
+              { opacity: 0, y: 30, scale: 0.97 },
+              { opacity: 1, y: 0, scale: 1, duration: 0.58, ease: "power3.out", stagger: 0.09 }, 0.22);
+            tl.fromTo("#s3 .integration-path",
+              { opacity: 0, y: 18 },
+              { opacity: 1, y: 0, duration: 0.5, ease: "power3.out", stagger: 0.08 }, 0.48);
+            window.__timelines["s3"] = tl;
+          })();
+        </script>
+      </section>
+
+      <section id="s4" class="scene clip layout-boundary"
+               data-composition-id="s4" data-start="24"
+               data-duration="8" data-label="Action authorization does not supply the whole data system">
+        <div class="slide-shell">
+          <div class="slide-chrome">
+          <span class="slide-count">04 / 11</span>
+        </div>
+          <h1 class="slide-title hf-animate">Action authorization does not supply the whole data system</h1>
+          <div class="slide-content"><div class="boundary-map">
+          <div class="boundary-side protocol-side hf-animate">
+            <span class="side-label">MPAS protocol</span>
+            <ul><li>Exact action representation</li><li>Approvals and deterministic verification</li><li>Committed-payload execution and receipts</li></ul>
+          </div>
+          <div class="boundary-divider hf-animate"><span>≠</span></div>
+          <div class="boundary-side product-side hf-animate">
+            <span class="side-label">Outside the protocol</span>
+            <ul><li>Document retrieval and row filtering</li><li>Data classification and disclosure control</li><li>Secret storage and key management</li></ul>
+          </div>
+          <div class="beyond-row hf-animate"><strong>Beyond the protocol</strong><span>A data-access request can be governed; another system must enforce the data boundary</span></div>
+        </div></div>
+          <div class="footer-spacer" aria-hidden="true"></div>
+        </div>
+        <script>
+          (function () {
+            window.__timelines = window.__timelines || {};
+            var tl = gsap.timeline({ paused: true });
+            tl.fromTo("#s4 .slide-title",
+              { opacity: 0, y: 24, clipPath: "inset(0 0 100% 0)" },
+              { opacity: 1, y: 0, clipPath: "inset(0 0 0% 0)", duration: 0.65, ease: "expo.out" }, 0.08);
+            tl.fromTo("#s4 .boundary-side, .boundary-divider",
+              { opacity: 0, y: 30, scale: 0.97 },
+              { opacity: 1, y: 0, scale: 1, duration: 0.58, ease: "power3.out", stagger: 0.09 }, 0.22);
+            tl.fromTo("#s4 .beyond-row",
+              { opacity: 0, y: 18 },
+              { opacity: 1, y: 0, duration: 0.5, ease: "power3.out", stagger: 0.08 }, 0.48);
+            window.__timelines["s4"] = tl;
+          })();
+        </script>
+      </section>
+
+      <section id="s5" class="scene clip layout-conjunction"
+               data-composition-id="s5" data-start="32"
+               data-duration="8" data-label="The opportunity is the combination, not a missing primitive">
+        <div class="slide-shell">
+          <div class="slide-chrome">
+          <span class="slide-count">05 / 11</span>
+        </div>
+          <h1 class="slide-title hf-animate">The opportunity is the combination, not a missing primitive</h1>
+          <div class="slide-content"><div class="conjunction-map">
+          <div class="conjunction-core hf-animate"><span>Credible gap</span><strong>THE COMBINATION</strong></div>
+          <div class="conjunction-node hf-animate n1"><span>Digest-bound general actions</span></div><div class="conjunction-node hf-animate n2"><span>Distinct approvals when policy requires them</span></div><div class="conjunction-node hf-animate n3"><span>Proposer exclusion when policy requires it</span></div><div class="conjunction-node hf-animate n4"><span>Credential isolation</span></div><div class="conjunction-node hf-animate n5"><span>Committed-payload execution</span></div><div class="conjunction-node hf-animate n6"><span>Third-party-verifiable evidence</span></div>
+        </div>
+        <div class="slide-boundary hf-animate"><strong>Boundary</strong><span>August research inference: a useful combination of known controls; the specification does not require every part</span></div></div>
+          <div class="footer-spacer" aria-hidden="true"></div>
+        </div>
+        <script>
+          (function () {
+            window.__timelines = window.__timelines || {};
+            var tl = gsap.timeline({ paused: true });
+            tl.fromTo("#s5 .slide-title",
+              { opacity: 0, y: 24, clipPath: "inset(0 0 100% 0)" },
+              { opacity: 1, y: 0, clipPath: "inset(0 0 0% 0)", duration: 0.65, ease: "expo.out" }, 0.08);
+            tl.fromTo("#s5 .conjunction-core, .conjunction-node",
+              { opacity: 0, y: 30, scale: 0.97 },
+              { opacity: 1, y: 0, scale: 1, duration: 0.58, ease: "power3.out", stagger: 0.09 }, 0.22);
+            tl.fromTo("#s5 .slide-boundary",
+              { opacity: 0, y: 18 },
+              { opacity: 1, y: 0, duration: 0.5, ease: "power3.out", stagger: 0.08 }, 0.48);
+            window.__timelines["s5"] = tl;
+          })();
+        </script>
+      </section>
+
+      <section id="s6" class="scene clip layout-field"
+               data-composition-id="s6" data-start="40"
+               data-duration="8" data-label="The August review found close comparisons and adverse evidence">
+        <div class="slide-shell">
+          <div class="slide-chrome">
+          <span class="slide-count">06 / 11</span>
+        </div>
+          <h1 class="slide-title hf-animate">The August review found close comparisons and adverse evidence</h1>
+          <div class="slide-content"><div class="field-map"><div class="field-column hf-animate">
+              <span class="field-label">Established components</span>
+              <ul><li>Approval systems</li><li>Payload binding</li><li>Credential isolation</li><li>Receipts and multi-party authorization</li></ul>
+            </div><div class="field-column hf-animate">
+              <span class="field-label">Bounded finding</span>
+              <ul><li>Microsoft and Teleport were close comparisons in August</li><li>Automation can reduce manual approval steps</li><li>Bounded searches are evidence floors, not a market census</li></ul>
+            </div></div></div>
+          <div class="footer-spacer" aria-hidden="true"></div>
+        </div>
+        <script>
+          (function () {
+            window.__timelines = window.__timelines || {};
+            var tl = gsap.timeline({ paused: true });
+            tl.fromTo("#s6 .slide-title",
+              { opacity: 0, y: 24, clipPath: "inset(0 0 100% 0)" },
+              { opacity: 1, y: 0, clipPath: "inset(0 0 0% 0)", duration: 0.65, ease: "expo.out" }, 0.08);
+            tl.fromTo("#s6 .field-column",
+              { opacity: 0, y: 30, scale: 0.97 },
+              { opacity: 1, y: 0, scale: 1, duration: 0.58, ease: "power3.out", stagger: 0.09 }, 0.22);
+            tl.fromTo("#s6 .field-column:last-child",
+              { opacity: 0, y: 18 },
+              { opacity: 1, y: 0, duration: 0.5, ease: "power3.out", stagger: 0.08 }, 0.48);
+            window.__timelines["s6"] = tl;
+          })();
+        </script>
+      </section>
+
+      <section id="s7" class="scene clip layout-metrics"
+               data-composition-id="s7" data-start="48"
+               data-duration="8" data-label="August code evidence showed buildability, not readiness">
+        <div class="slide-shell">
+          <div class="slide-chrome">
+          <span class="slide-count">07 / 11</span>
+        </div>
+          <h1 class="slide-title hf-animate">August code evidence showed buildability, not readiness</h1>
+          <div class="slide-content"><div class="metrics-band"><div class="metric hf-animate">
+              <strong>194</strong>
+              <span>SDK tests passed in the historical run; type and build checks passed</span>
+            </div><div class="metric hf-animate">
+              <strong>403</strong>
+              <span>tests passed in the separate local implementation run</span>
+            </div><div class="metric hf-animate">
+              <strong>55</strong>
+              <span>findings in the August accepted inventory</span>
+            </div><div class="metric hf-animate">
+              <strong>11</strong>
+              <span>findings independently re-derived in that review</span>
+            </div><div class="metric hf-animate">
+              <strong>13</strong>
+              <span>repair groupings for the other 44 findings</span>
+            </div></div>
+        <div class="slide-boundary evidence-boundary hf-animate"><strong>Evidence boundary</strong><span>Private August evidence summarized here; no new test run, unique-test sum or production-readiness claim</span></div></div>
+          <div class="footer-spacer" aria-hidden="true"></div>
+        </div>
+        <script>
+          (function () {
+            window.__timelines = window.__timelines || {};
+            var tl = gsap.timeline({ paused: true });
+            tl.fromTo("#s7 .slide-title",
+              { opacity: 0, y: 24, clipPath: "inset(0 0 100% 0)" },
+              { opacity: 1, y: 0, clipPath: "inset(0 0 0% 0)", duration: 0.65, ease: "expo.out" }, 0.08);
+            tl.fromTo("#s7 .metric",
+              { opacity: 0, y: 30, scale: 0.97 },
+              { opacity: 1, y: 0, scale: 1, duration: 0.58, ease: "power3.out", stagger: 0.09 }, 0.22);
+            tl.fromTo("#s7 .evidence-boundary",
+              { opacity: 0, y: 18 },
+              { opacity: 1, y: 0, duration: 0.5, ease: "power3.out", stagger: 0.08 }, 0.48);
+            window.__timelines["s7"] = tl;
+          })();
+        </script>
+      </section>
+
+      <section id="s8" class="scene clip layout-limits"
+               data-composition-id="s8" data-start="56"
+               data-duration="8" data-label="MPAS creates stronger evidence, not certainty">
+        <div class="slide-shell">
+          <div class="slide-chrome">
+          <span class="slide-count">08 / 11</span>
+        </div>
+          <h1 class="slide-title hf-animate">MPAS creates stronger evidence, not certainty</h1>
+          <div class="slide-content"><div class="limits-map"><div class="limit-row hf-animate">
+              <strong>Receipts</strong>
+              <span>Signed reports, not external truth</span>
+            </div><div class="limit-row hf-animate">
+              <strong>External effects</strong>
+              <span>Duplicate prevention has limits; outcomes can remain uncertain</span>
+            </div><div class="limit-row hf-animate">
+              <strong>Credentials</strong>
+              <span>Exposure reduced, not erased</span>
+            </div><div class="limit-row hf-animate">
+              <strong>Independence</strong>
+              <span>Signature count does not prove diverse control</span>
+            </div><div class="limit-row hf-animate">
+              <strong>Privacy</strong>
+              <span>Approver identity remains visible</span>
+            </div><div class="limit-row hf-animate">
+              <strong>Covert outcomes</strong>
+              <span>Per-action authorization does not eliminate them</span>
+            </div></div></div>
+          <div class="footer-spacer" aria-hidden="true"></div>
+        </div>
+        <script>
+          (function () {
+            window.__timelines = window.__timelines || {};
+            var tl = gsap.timeline({ paused: true });
+            tl.fromTo("#s8 .slide-title",
+              { opacity: 0, y: 24, clipPath: "inset(0 0 100% 0)" },
+              { opacity: 1, y: 0, clipPath: "inset(0 0 0% 0)", duration: 0.65, ease: "expo.out" }, 0.08);
+            tl.fromTo("#s8 .limit-row",
+              { opacity: 0, y: 30, scale: 0.97 },
+              { opacity: 1, y: 0, scale: 1, duration: 0.58, ease: "power3.out", stagger: 0.09 }, 0.22);
+            tl.fromTo("#s8 .limit-row:last-child",
+              { opacity: 0, y: 18 },
+              { opacity: 1, y: 0, duration: 0.5, ease: "power3.out", stagger: 0.08 }, 0.48);
+            window.__timelines["s8"] = tl;
+          })();
+        </script>
+      </section>
+
+      <section id="s9" class="scene clip layout-commercial"
+               data-composition-id="s9" data-start="64"
+               data-duration="8" data-label="License terms and historical demand evidence answer different questions">
+        <div class="slide-shell">
+          <div class="slide-chrome">
+          <span class="slide-count">09 / 11</span>
+        </div>
+          <h1 class="slide-title hf-animate">License terms and historical demand evidence answer different questions</h1>
+          <div class="slide-content"><div class="commercial-map">
+          <div class="commercial-side verified-side hf-animate"><span>Verified</span><ul><li>The recorded repository license is Apache-2.0</li><li>August OMA3 index reading: approved open-source project</li></ul></div>
+          <div class="commercial-side unknown-side hf-animate"><span>Unknown</span><ul><li>Buyer interviews in the August corpus</li><li>Budget-holder commitments in that corpus</li><li>Pricing conversations and pilots in that corpus</li><li>Category-specific market size</li></ul></div>
+        </div>
+        <div class="slide-boundary hf-animate"><strong>Boundary</strong><span>The August corpus did not establish formal-standard status or demand; this is not a current legal or market conclusion</span></div></div>
+          <div class="footer-spacer" aria-hidden="true"></div>
+        </div>
+        <script>
+          (function () {
+            window.__timelines = window.__timelines || {};
+            var tl = gsap.timeline({ paused: true });
+            tl.fromTo("#s9 .slide-title",
+              { opacity: 0, y: 24, clipPath: "inset(0 0 100% 0)" },
+              { opacity: 1, y: 0, clipPath: "inset(0 0 0% 0)", duration: 0.65, ease: "expo.out" }, 0.08);
+            tl.fromTo("#s9 .commercial-side",
+              { opacity: 0, y: 30, scale: 0.97 },
+              { opacity: 1, y: 0, scale: 1, duration: 0.58, ease: "power3.out", stagger: 0.09 }, 0.22);
+            tl.fromTo("#s9 .slide-boundary",
+              { opacity: 0, y: 18 },
+              { opacity: 1, y: 0, duration: 0.5, ease: "power3.out", stagger: 0.08 }, 0.48);
+            window.__timelines["s9"] = tl;
+          })();
+        </script>
+      </section>
+
+      <section id="s10" class="scene clip layout-questions"
+               data-composition-id="s10" data-start="72"
+               data-duration="8" data-label="Three technical questions still need deployment evidence">
+        <div class="slide-shell">
+          <div class="slide-chrome">
+          <span class="slide-count">10 / 11</span>
+        </div>
+          <h1 class="slide-title hf-animate">Three technical questions still need deployment evidence</h1>
+          <div class="slide-content"><div class="proof-map"><div class="proof-column hf-animate">
+              <span>01</span>
+              <strong>Control independence</strong>
+              <p>Do distinct approval identities represent separate control?</p>
+            </div><div class="proof-column hf-animate">
+              <span>02</span>
+              <strong>Review quality</strong>
+              <p>Do approvers understand the exact action and its consequences?</p>
+            </div><div class="proof-column hf-animate">
+              <span>03</span>
+              <strong>Deployment proof</strong>
+              <p>Can a deployment pass independent security and operational review?</p>
+            </div></div>
+        <div class="other-edges hf-animate"><strong>Other unresolved edges</strong><span>Further defects, threshold-signing fit and external-system behavior remain open in this dated research</span></div></div>
+          <div class="footer-spacer" aria-hidden="true"></div>
+        </div>
+        <script>
+          (function () {
+            window.__timelines = window.__timelines || {};
+            var tl = gsap.timeline({ paused: true });
+            tl.fromTo("#s10 .slide-title",
+              { opacity: 0, y: 24, clipPath: "inset(0 0 100% 0)" },
+              { opacity: 1, y: 0, clipPath: "inset(0 0 0% 0)", duration: 0.65, ease: "expo.out" }, 0.08);
+            tl.fromTo("#s10 .proof-column",
+              { opacity: 0, y: 30, scale: 0.97 },
+              { opacity: 1, y: 0, scale: 1, duration: 0.58, ease: "power3.out", stagger: 0.09 }, 0.22);
+            tl.fromTo("#s10 .other-edges",
+              { opacity: 0, y: 18 },
+              { opacity: 1, y: 0, duration: 0.5, ease: "power3.out", stagger: 0.08 }, 0.48);
+            window.__timelines["s10"] = tl;
+          })();
+        </script>
+      </section>
+
+      <section id="s11" class="scene clip layout-position"
+               data-composition-id="s11" data-start="80"
+               data-duration="8" data-label="The research conclusion is useful with its limits intact">
+        <div class="slide-shell">
+          <div class="slide-chrome">
+          <span class="slide-count">11 / 11</span>
+        </div>
+          <h1 class="slide-title hf-animate">The research conclusion is useful with its limits intact</h1>
+          <div class="slide-content"><div class="position-map">
+          <div class="position-column safe-column hf-animate"><span>Safe to say</span><ul><li>Open protocol for exact actions through approval, verification, execution and receipt</li><li>August research identified a potentially useful combination of controls</li><li>Historical private runs showed buildability, with readiness unresolved</li><li>Data retrieval, disclosure enforcement and secret storage remain separate</li></ul></div>
+          <div class="position-column stop-column hf-animate"><span>Do not say</span><ul><li>Every action has independent multi-party approval or uses an adapter</li><li>Invented payload binding, formal-standard status or production readiness</li><li>Buyer demand or market size is proven</li></ul></div>
+        </div>
+        <div class="partner-question hf-animate"><strong>Research question</strong><span>What evidence would resolve independence, review-quality and deployment limits?</span></div></div>
+          <div class="footer-spacer" aria-hidden="true"></div>
+        </div>
+        <script>
+          (function () {
+            window.__timelines = window.__timelines || {};
+            var tl = gsap.timeline({ paused: true });
+            tl.fromTo("#s11 .slide-title",
+              { opacity: 0, y: 24, clipPath: "inset(0 0 100% 0)" },
+              { opacity: 1, y: 0, clipPath: "inset(0 0 0% 0)", duration: 0.65, ease: "expo.out" }, 0.08);
+            tl.fromTo("#s11 .position-column",
+              { opacity: 0, y: 30, scale: 0.97 },
+              { opacity: 1, y: 0, scale: 1, duration: 0.58, ease: "power3.out", stagger: 0.09 }, 0.22);
+            tl.fromTo("#s11 .partner-question",
+              { opacity: 0, y: 18 },
+              { opacity: 1, y: 0, duration: 0.5, ease: "power3.out", stagger: 0.08 }, 0.48);
+            window.__timelines["s11"] = tl;
+          })();
+        </script>
+      </section>
+      <div class="deck-footer root-footer"><span></span><strong>MPAS</strong><em>Historical edition · 2026-08-31 · Public candidate</em></div>
+      <script>
+        (function () {
+          window.__timelines = window.__timelines || {};
+          var tl = gsap.timeline({ paused: true });
+          tl.to({}, { duration: 88 }, 0);
+          window.__timelines["main"] = tl;
+        })();
+      </script>
+    </main>
+  </body>
+</html>

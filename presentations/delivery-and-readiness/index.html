@@ -1,0 +1,712 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>MPAS delivery and readiness — 2026-09-01 historical edition</title>
+    <script src="../vendor/gsap.min.js"></script>
+    <script src="../vendor/hyperframe.runtime.iife.js"></script>
+    <style>
+      @font-face {
+        font-family: "SFMono-Regular";
+        src: local("SF Mono Regular");
+      }
+      :root {
+        --bg: #07131c;
+        --bg-deep: #041018;
+        --panel: #0e212c;
+        --panel-soft: #112a36;
+        --ink: #f4f8f7;
+        --muted: #a8bec6;
+        --line: #294653;
+        --cyan: #5ee0cb;
+        --blue: #75aefc;
+        --amber: #f0bd68;
+        --red: #ff837c;
+        --green: #79d6a5;
+      }
+
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      html, body {
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: "Avenir Next", Avenir, "Helvetica Neue", Arial, sans-serif;
+      }
+      body {
+        background:
+          radial-gradient(circle at 86% 12%, rgba(94, 224, 203, 0.11), transparent 32%),
+          radial-gradient(circle at 8% 94%, rgba(117, 174, 252, 0.10), transparent 35%),
+          var(--bg);
+      }
+      code { font-family: "SFMono-Regular", Consolas, monospace; color: var(--cyan); }
+      strong { font-weight: 700; }
+
+      .deck-root, .scene { position: relative; width: 1920px; height: 1080px; overflow: hidden; }
+      .scene { position: absolute; inset: 0; }
+      .slide-shell {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        padding: 54px 78px 48px;
+        display: flex;
+        flex-direction: column;
+      }
+      .root-chrome {
+        position: absolute;
+        z-index: 20;
+        top: 54px;
+        left: 78px;
+        right: 78px;
+        height: 42px;
+        display: flex;
+        align-items: center;
+        gap: 26px;
+        pointer-events: none;
+        color: var(--muted);
+        font-size: 22px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      .slide-chrome {
+        position: relative;
+        z-index: 3;
+        height: 42px;
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        color: var(--muted);
+        font-size: 22px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      .wordmark { color: var(--ink); font-weight: 800; font-size: 26px; letter-spacing: 0.16em; }
+      .deck-id { border-left: 1px solid var(--line); padding-left: 26px; }
+      .slide-count { color: var(--cyan); font-variant-numeric: tabular-nums; }
+      .slide-title {
+        position: relative;
+        z-index: 2;
+        max-width: 1500px;
+        margin-top: 42px;
+        color: var(--ink);
+        font-size: 70px;
+        line-height: 1.06;
+        letter-spacing: -0.038em;
+        text-wrap: balance;
+      }
+      .slide-content { position: relative; z-index: 2; flex: 1; min-height: 0; margin-top: 38px; }
+      .deck-footer {
+        position: relative;
+        z-index: 2;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        color: var(--muted);
+        font-size: 19px;
+      }
+      .deck-footer > span { height: 1px; flex: 1; background: var(--line); }
+      .deck-footer strong { color: var(--ink); letter-spacing: 0.03em; }
+      .deck-footer em { font-style: normal; }
+      .root-footer {
+        position: absolute;
+        z-index: 20;
+        left: 78px;
+        right: 78px;
+        bottom: 48px;
+        pointer-events: none;
+      }
+      .footer-spacer { height: 32px; flex: 0 0 32px; }
+      .hf-animate { opacity: 1; }
+
+      .hero-layout { height: 100%; display: grid; grid-template-columns: 1.07fr 0.93fr; gap: 72px; align-items: center; }
+      .hero-copy { align-self: center; }
+      .hero-title {
+        max-width: 950px;
+        font-size: 94px;
+        line-height: 0.99;
+        letter-spacing: -0.04em;
+        text-wrap: balance;
+      }
+      .hero-subtitle { max-width: 870px; margin-top: 38px; color: var(--muted); font-size: 39px; line-height: 1.25; }
+      .hero-meta { margin-top: 42px; display: flex; gap: 18px; flex-wrap: wrap; }
+      .hero-meta span { padding: 12px 18px; border: 1px solid var(--line); color: var(--ink); font-size: 23px; }
+      .action-rig { position: relative; min-height: 660px; display: flex; align-items: center; justify-content: center; }
+      .action-rig::before {
+        content: "";
+        position: absolute;
+        inset: 60px 20px;
+        border: 1px solid var(--line);
+        clip-path: polygon(0 12%, 86% 0, 100% 70%, 18% 100%);
+        background: rgba(14, 33, 44, 0.52);
+      }
+      .rig-label { position: absolute; top: 86px; left: 74px; color: var(--cyan); font-size: 22px; text-transform: uppercase; letter-spacing: 0.12em; }
+      .exact-action {
+        position: relative;
+        width: 300px;
+        height: 300px;
+        border-radius: 50%;
+        border: 2px solid var(--cyan);
+        display: grid;
+        place-content: center;
+        text-align: center;
+        background: radial-gradient(circle, rgba(94, 224, 203, 0.16), rgba(7, 19, 28, 0.78) 67%);
+        box-shadow: 20px 28px 70px rgba(0, 0, 0, 0.35);
+      }
+      .exact-action::before, .exact-action::after { content: ""; position: absolute; border: 1px solid rgba(94, 224, 203, 0.35); border-radius: 50%; }
+      .exact-action::before { inset: -44px; }
+      .exact-action::after { inset: -92px; border-style: dashed; }
+      .exact-action span { color: var(--muted); font-size: 24px; letter-spacing: 0.2em; }
+      .exact-action strong { color: var(--ink); font-size: 56px; letter-spacing: -0.035em; }
+      .action-track { position: absolute; left: 34px; right: 34px; bottom: 48px; display: flex; justify-content: space-between; }
+      .action-track::before { content: ""; position: absolute; left: 20px; right: 20px; top: 8px; height: 2px; background: linear-gradient(90deg, var(--blue), var(--cyan)); }
+      .action-stage { position: relative; display: grid; justify-items: center; gap: 10px; color: var(--muted); font-size: 19px; }
+      .action-stage i { width: 16px; height: 16px; border-radius: 50%; background: var(--cyan); }
+
+      .flow-map { height: 560px; display: grid; grid-template-columns: repeat(6, 1fr); align-items: center; gap: 20px; }
+      .flow-node { position: relative; min-height: 350px; padding: 34px 24px; border-top: 3px solid var(--cyan); border-bottom: 1px solid var(--line); background: rgba(14, 33, 44, 0.72); }
+      .flow-node:not(:last-child)::after { content: ""; position: absolute; right: -19px; top: 50%; width: 18px; height: 18px; border-top: 2px solid var(--cyan); border-right: 2px solid var(--cyan); transform: rotate(45deg); }
+      .flow-index { color: var(--cyan); font-size: 20px; letter-spacing: 0.12em; }
+      .flow-node strong { display: block; margin-top: 72px; font-size: 35px; }
+      .flow-node p { margin-top: 20px; color: var(--muted); font-size: 27px; line-height: 1.28; }
+
+      .participant-system { height: 570px; display: grid; grid-template-columns: 1.25fr 0.75fr; gap: 80px; align-items: center; }
+      .participant-orbit { position: relative; width: 840px; height: 560px; }
+      .orbit-ring { position: absolute; inset: 38px 92px; border: 1px solid var(--line); border-radius: 50%; }
+      .orbit-core { position: absolute; left: 310px; top: 185px; width: 220px; height: 190px; display: grid; place-content: center; text-align: center; border: 2px solid var(--cyan); border-radius: 50%; background: var(--panel); box-shadow: 18px 22px 60px rgba(0, 0, 0, 0.32); }
+      .orbit-core strong { font-size: 54px; }
+      .orbit-core span { color: var(--cyan); font-size: 22px; letter-spacing: 0.1em; text-transform: uppercase; }
+      .participant { position: absolute; min-width: 176px; padding: 15px 20px; border: 1px solid var(--line); background: rgba(7, 19, 28, 0.92); color: var(--ink); font-size: 27px; text-align: center; }
+      .p1 { left: 332px; top: 16px; } .p2 { right: 6px; top: 128px; } .p3 { right: 20px; bottom: 92px; }
+      .p4 { left: 330px; bottom: 6px; } .p5 { left: 10px; bottom: 92px; } .p6 { left: 0; top: 128px; }
+      .integration-rail { display: grid; gap: 30px; }
+      .integration-path { padding: 30px 0; border-top: 1px solid var(--line); }
+      .integration-path span { display: block; color: var(--cyan); font-size: 20px; text-transform: uppercase; letter-spacing: 0.1em; }
+      .integration-path strong { display: block; margin-top: 12px; font-size: 35px; line-height: 1.16; }
+
+      .boundary-map { height: 570px; display: grid; grid-template-columns: 1fr 80px 1fr; grid-template-rows: 1fr auto; column-gap: 26px; }
+      .boundary-side { padding: 34px 46px; background: rgba(14, 33, 44, 0.7); }
+      .protocol-side { border-top: 4px solid var(--cyan); } .product-side { border-top: 4px solid var(--blue); }
+      .side-label { color: var(--muted); font-size: 22px; text-transform: uppercase; letter-spacing: 0.1em; }
+      .boundary-side ul { list-style: none; margin-top: 46px; }
+      .boundary-side li { padding: 20px 0; border-top: 1px solid var(--line); font-size: 36px; line-height: 1.17; }
+      .boundary-divider { position: relative; display: grid; place-items: center; }
+      .boundary-divider::before { content: ""; position: absolute; top: 0; bottom: 0; width: 1px; background: var(--line); }
+      .boundary-divider span { position: relative; padding: 12px; background: var(--bg); color: var(--amber); font-size: 38px; }
+      .beyond-row { grid-column: 1 / -1; display: grid; grid-template-columns: 260px 1fr; gap: 24px; padding: 22px 30px; border: 1px solid var(--line); border-top: none; }
+      .beyond-row strong { color: var(--amber); font-size: 26px; } .beyond-row span { color: var(--muted); font-size: 27px; }
+
+      .conjunction-map { position: relative; height: 470px; }
+      .conjunction-core { position: absolute; left: 50%; top: 50%; width: 330px; height: 210px; transform: translate(-50%, -50%); border: 2px solid var(--cyan); display: grid; place-content: center; text-align: center; background: var(--panel); z-index: 2; }
+      .conjunction-core span { color: var(--cyan); font-size: 23px; } .conjunction-core strong { margin-top: 10px; font-size: 38px; }
+      .conjunction-node { position: absolute; width: 360px; min-height: 94px; padding: 24px 28px; border-top: 2px solid var(--line); color: var(--ink); font-size: 29px; line-height: 1.16; }
+      .conjunction-node::after { content: ""; position: absolute; top: 50%; width: 110px; height: 1px; background: var(--line); }
+      .n1 { left: 0; top: 10px; } .n2 { left: 0; top: 180px; } .n3 { left: 0; bottom: 0; }
+      .n4 { right: 0; top: 10px; } .n5 { right: 0; top: 180px; } .n6 { right: 0; bottom: 0; }
+      .n1::after, .n2::after, .n3::after { right: -110px; } .n4::after, .n5::after, .n6::after { left: -110px; }
+      .slide-boundary { display: grid; grid-template-columns: 210px 1fr; gap: 24px; padding: 22px 28px; border-top: 1px solid var(--amber); color: var(--muted); font-size: 27px; line-height: 1.22; }
+      .slide-boundary strong { color: var(--amber); }
+
+      .field-map { height: 565px; display: grid; grid-template-columns: 0.83fr 1.17fr; gap: 64px; }
+      .field-column { padding-top: 26px; border-top: 4px solid var(--line); }
+      .field-column:last-child { border-top-color: var(--cyan); }
+      .field-label { color: var(--muted); font-size: 22px; text-transform: uppercase; letter-spacing: 0.1em; }
+      .field-column ul { list-style: none; margin-top: 38px; }
+      .field-column li { padding: 20px 0; border-top: 1px solid var(--line); font-size: 33px; line-height: 1.2; }
+
+      .metrics-band { height: 390px; display: grid; grid-template-columns: repeat(5, 1fr); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+      .metric { padding: 44px 30px 34px; border-right: 1px solid var(--line); } .metric:last-child { border-right: none; }
+      .metric strong { display: block; color: var(--cyan); font-size: 82px; line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: -0.04em; }
+      .metric span { display: block; margin-top: 34px; color: var(--muted); font-size: 27px; line-height: 1.22; }
+      .evidence-boundary { margin-top: 46px; font-size: 28px; }
+
+      .limits-map { height: 570px; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(2, 1fr); column-gap: 42px; row-gap: 20px; }
+      .limit-row { padding: 30px 12px 24px; border-top: 3px solid var(--line); }
+      .limit-row:nth-child(1), .limit-row:nth-child(4) { border-top-color: var(--cyan); }
+      .limit-row strong { display: block; color: var(--ink); font-size: 30px; }
+      .limit-row span { display: block; margin-top: 20px; color: var(--muted); font-size: 33px; line-height: 1.18; }
+
+      .commercial-map { height: 440px; display: grid; grid-template-columns: 0.82fr 1.18fr; gap: 40px; }
+      .commercial-side { padding: 34px 42px; background: rgba(14, 33, 44, 0.72); }
+      .verified-side { border-top: 4px solid var(--green); } .unknown-side { border-top: 4px solid var(--amber); }
+      .commercial-side > span { color: var(--muted); font-size: 22px; text-transform: uppercase; letter-spacing: 0.12em; }
+      .commercial-side ul { list-style: none; margin-top: 34px; }
+      .commercial-side li { padding: 18px 0; border-top: 1px solid var(--line); font-size: 31px; line-height: 1.18; }
+      .commercial-side li::before { content: ""; display: inline-block; width: 9px; height: 9px; margin-right: 16px; background: currentColor; transform: rotate(45deg); }
+
+      .proof-map { height: 410px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 34px; }
+      .proof-column { padding: 28px 34px; border-top: 4px solid var(--cyan); background: rgba(14, 33, 44, 0.66); }
+      .proof-column > span { color: var(--cyan); font-size: 22px; letter-spacing: 0.12em; }
+      .proof-column strong { display: block; margin-top: 58px; font-size: 39px; }
+      .proof-column p { margin-top: 20px; color: var(--muted); font-size: 30px; line-height: 1.22; }
+      .other-edges { margin-top: 34px; display: grid; grid-template-columns: 310px 1fr; gap: 26px; padding: 25px 30px; border-top: 1px solid var(--amber); }
+      .other-edges strong { color: var(--amber); font-size: 27px; } .other-edges span { color: var(--muted); font-size: 26px; line-height: 1.2; }
+
+      .position-map { height: 450px; display: grid; grid-template-columns: 1.08fr 0.92fr; gap: 50px; }
+      .position-column { padding-top: 24px; border-top: 4px solid var(--line); }
+      .safe-column { border-top-color: var(--green); } .stop-column { border-top-color: var(--red); }
+      .position-column > span { color: var(--muted); font-size: 22px; text-transform: uppercase; letter-spacing: 0.12em; }
+      .position-column ul { list-style: none; margin-top: 28px; }
+      .position-column li { padding: 14px 0 14px 26px; border-top: 1px solid var(--line); font-size: 26px; line-height: 1.18; position: relative; }
+      .position-column li::before { content: ""; position: absolute; left: 0; top: 24px; width: 9px; height: 9px; background: currentColor; transform: rotate(45deg); }
+      .safe-column li::before { color: var(--green); } .stop-column li::before { color: var(--red); }
+      .partner-question { margin-top: 26px; display: grid; grid-template-columns: 250px 1fr; gap: 28px; align-items: center; padding: 24px 30px; background: var(--cyan); color: var(--bg-deep); box-shadow: 18px 24px 64px rgba(0, 0, 0, 0.24); }
+      .partner-question strong { font-size: 26px; } .partner-question span { font-size: 30px; font-weight: 650; }
+
+      .resource-list { height: 470px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px 34px; }
+      .resource-row { padding: 24px 28px; border-top: 3px solid var(--cyan); background: rgba(14, 33, 44, 0.66); min-width: 0; }
+      .resource-row strong { display: block; color: var(--ink); font-size: 29px; }
+      .resource-row span { display: block; margin-top: 16px; color: var(--muted); font-family: "SFMono-Regular", Consolas, monospace; font-size: 19px; line-height: 1.28; overflow-wrap: anywhere; }
+      .next-action { margin-top: 24px; display: grid; grid-template-columns: 220px 1fr; gap: 26px; align-items: center; padding: 24px 30px; background: var(--cyan); color: var(--bg-deep); }
+      .next-action strong { font-size: 25px; } .next-action span { font-size: 28px; font-weight: 650; }
+    </style>
+  </head>
+  <body>
+    <script type="application/hyperframes-slideshow+json">
+{
+  "slides": [
+    {
+      "sceneId": "s1",
+      "notes": "SAY ▸ = read the quoted words exactly   • = keywords, say it your way   [ ] = do, don't read\n\nThis deck preserves the September 1 delivery snapshot. It does not claim that the private repair state is still current. The sequence illustrates why component work, real-agent acceptance, final conformance and a complete technical report are different deliverables. No calendar promise is included.\n\n[SOURCE REFERENCES: presenter notes]\n[SRC: [Slide 1 evidence summary](EVIDENCE.md#slide-1) — dated 2026-09-01; private evidence summarized where stated.]"
+    },
+    {
+      "sceneId": "s2",
+      "notes": "SAY ▸ = read the quoted words exactly   • = keywords, say it your way   [ ] = do, don't read\n\nThese measures describe different parts of the September 1 source collection and cannot be combined into a test total. The existing research deck had eleven slides. Its historical acceptance does not verify this newly revised copy. Private proof exercises used bounded and simulated conditions.\n\n[SOURCE REFERENCES: presenter notes]\n[SRC: [Slide 2 evidence summary](EVIDENCE.md#slide-2) — dated 2026-09-01; private evidence summarized where stated.]"
+    },
+    {
+      "sceneId": "s3",
+      "notes": "SAY ▸ = read the quoted words exactly   • = keywords, say it your way   [ ] = do, don't read\n\nThe September 1 report distinguishes existing reading material and private setup from the later acceptance outputs. Do not turn its underway language into a present progress claim. A report being usable does not mean the product is ready.\n\n[SOURCE REFERENCES: presenter notes]\n[SRC: [Slide 3 evidence summary](EVIDENCE.md#slide-3) — dated 2026-09-01; private evidence summarized where stated.]"
+    },
+    {
+      "sceneId": "s4",
+      "notes": "SAY ▸ = read the quoted words exactly   • = keywords, say it your way   [ ] = do, don't read\n\nThis is the dependency sequence recorded on September 1, not a current schedule. Each stage requires its own evidence. Reviewing an exact contribution package is distinct from approving submission, release or deployment.\n\n[SOURCE REFERENCES: presenter notes]\n[SRC: [Slide 4 evidence summary](EVIDENCE.md#slide-4) — dated 2026-09-01; private evidence summarized where stated.]"
+    },
+    {
+      "sceneId": "s5",
+      "notes": "SAY ▸ = read the quoted words exactly   • = keywords, say it your way   [ ] = do, don't read\n\nReady must name both the artifact and its intended use. A component can be accepted privately while the system still lacks live-agent and integrated proof. A planned final collection is not an existing collection. External use requires its own decision.\n\n[SOURCE REFERENCES: presenter notes]\n[SRC: [Slide 5 evidence summary](EVIDENCE.md#slide-5) — dated 2026-09-01; private evidence summarized where stated.]"
+    },
+    {
+      "sceneId": "s6",
+      "notes": "SAY ▸ = read the quoted words exactly   • = keywords, say it your way   [ ] = do, don't read\n\nThese are the outputs required in the historical plan. Seventeen is a required scenario count, not passed scenarios. Preparing tests or instructions is different from running them with real proposing and signing agents. No delivery date follows from this list.\n\n[SOURCE REFERENCES: presenter notes]\n[SRC: [Slide 6 evidence summary](EVIDENCE.md#slide-6) — dated 2026-09-01; private evidence summarized where stated.]"
+    },
+    {
+      "sceneId": "s7",
+      "notes": "SAY ▸ = read the quoted words exactly   • = keywords, say it your way   [ ] = do, don't read\n\nThis slide distinguishes three technical review scopes. A component result cannot decide whole-system acceptance, and package review cannot silently authorize publication or deployment.\n\n[SOURCE REFERENCES: presenter notes]\n[SRC: [Slide 7 evidence summary](EVIDENCE.md#slide-7) — dated 2026-09-01; private evidence summarized where stated.]"
+    },
+    {
+      "sceneId": "s8",
+      "notes": "SAY ▸ = read the quoted words exactly   • = keywords, say it your way   [ ] = do, don't read\n\nThis is a conditional future state, not safe-to-say current completion. The fourth technical pack is absent from the historical collection. Required integrated and real-agent evidence must actually be accepted before the final account can make those claims. Existing public fixes are separate from private contribution candidates.\n\n[SOURCE REFERENCES: presenter notes]\n[SRC: [Slide 8 evidence summary](EVIDENCE.md#slide-8) — dated 2026-09-01; private evidence summarized where stated.]"
+    },
+    {
+      "sceneId": "s9",
+      "notes": "SAY ▸ = read the quoted words exactly   • = keywords, say it your way   [ ] = do, don't read\n\nEach local reference resolves inside this candidate folder. The summaries disclose when underlying evidence remains private. Use CONTENT.md for the complete slide text. This historical edition does not direct current technical work or promise delivery.\n\n[SOURCE REFERENCES: presenter notes]\n[SRC: [Slide 9 evidence summary](EVIDENCE.md#slide-9) — dated 2026-09-01; private evidence summarized where stated.]"
+    }
+  ]
+}
+    </script>
+    <main id="root" class="deck-root" data-composition-id="main" data-start="0"
+          data-duration="72" data-width="1920" data-height="1080">
+      <div class="root-chrome">
+        <span class="wordmark">MPAS</span>
+        <span class="deck-id">Delivery and readiness</span>
+      </div>
+      <section id="s1" class="scene clip layout-hero"
+               data-composition-id="s1" data-start="0"
+               data-duration="8" data-label="The September 1 delivery snapshot separates work from proof">
+        <div class="slide-shell">
+          <div class="slide-chrome">
+          <span class="slide-count">01 / 09</span>
+        </div>
+          <div class="slide-content"><div class="hero-layout">
+          <div class="hero-copy">
+            <h1 class="hero-title hf-animate">The September 1 delivery snapshot separates work from proof</h1>
+            <p class="hero-subtitle hf-animate">Three nontechnical packs existed; the final technical pack still depended on repair and acceptance evidence</p>
+            <div class="hero-meta hf-animate"><span>Readiness snapshot · 2026-09-01</span><span>Historical delivery edition</span></div>
+          </div>
+          <div class="action-rig" aria-label="Reports → repairs → acceptance → review → technical pack">
+            <span class="rig-label hf-animate">Delivery path</span>
+            <div class="exact-action hf-animate"><span>READY</span><strong>BY STAGE</strong></div>
+            <div class="action-track"><span class="action-stage hf-animate"><i></i>Reports</span><span class="action-stage hf-animate"><i></i>repairs</span><span class="action-stage hf-animate"><i></i>acceptance</span><span class="action-stage hf-animate"><i></i>review</span><span class="action-stage hf-animate"><i></i>technical pack</span></div>
+          </div>
+        </div></div>
+          <div class="footer-spacer" aria-hidden="true"></div>
+        </div>
+        <script>
+          (function () {
+            window.__timelines = window.__timelines || {};
+            var tl = gsap.timeline({ paused: true });
+            tl.fromTo("#s1 .hero-title",
+              { opacity: 0, y: 24, clipPath: "inset(0 0 100% 0)" },
+              { opacity: 1, y: 0, clipPath: "inset(0 0 0% 0)", duration: 0.65, ease: "expo.out" }, 0.08);
+            tl.fromTo("#s1 .hero-subtitle, .hero-meta, .rig-label",
+              { opacity: 0, y: 30, scale: 0.97 },
+              { opacity: 1, y: 0, scale: 1, duration: 0.58, ease: "power3.out", stagger: 0.09 }, 0.22);
+            tl.fromTo("#s1 .exact-action, .action-stage",
+              { opacity: 0, y: 18 },
+              { opacity: 1, y: 0, duration: 0.5, ease: "power3.out", stagger: 0.08 }, 0.48);
+            window.__timelines["s1"] = tl;
+          })();
+        </script>
+      </section>
+
+      <section id="s2" class="scene clip layout-metrics"
+               data-composition-id="s2" data-start="8"
+               data-duration="8" data-label="The dated evidence base supported review, not release">
+        <div class="slide-shell">
+          <div class="slide-chrome">
+          <span class="slide-count">02 / 09</span>
+        </div>
+          <h1 class="slide-title hf-animate">The dated evidence base supported review, not release</h1>
+          <div class="slide-content"><div class="metrics-band"><div class="metric hf-animate">
+              <strong>6</strong>
+              <span>normative documents in the August source baseline</span>
+            </div><div class="metric hf-animate">
+              <strong>55</strong>
+              <span>findings in the accepted historical inventory</span>
+            </div><div class="metric hf-animate">
+              <strong>11</strong>
+              <span>findings independently re-derived</span>
+            </div><div class="metric hf-animate">
+              <strong>4</strong>
+              <span>private proof exercises with recorded limits</span>
+            </div><div class="metric hf-animate">
+              <strong>11</strong>
+              <span>slides in the existing research deck</span>
+            </div></div>
+        <div class="slide-boundary evidence-boundary hf-animate"><strong>Evidence boundary</strong><span>Historical private evidence summarized; no new test, browser acceptance or release-readiness claim</span></div></div>
+          <div class="footer-spacer" aria-hidden="true"></div>
+        </div>
+        <script>
+          (function () {
+            window.__timelines = window.__timelines || {};
+            var tl = gsap.timeline({ paused: true });
+            tl.fromTo("#s2 .slide-title",
+              { opacity: 0, y: 24, clipPath: "inset(0 0 100% 0)" },
+              { opacity: 1, y: 0, clipPath: "inset(0 0 0% 0)", duration: 0.65, ease: "expo.out" }, 0.08);
+            tl.fromTo("#s2 .metric",
+              { opacity: 0, y: 30, scale: 0.97 },
+              { opacity: 1, y: 0, scale: 1, duration: 0.58, ease: "power3.out", stagger: 0.09 }, 0.22);
+            tl.fromTo("#s2 .evidence-boundary",
+              { opacity: 0, y: 18 },
+              { opacity: 1, y: 0, duration: 0.5, ease: "power3.out", stagger: 0.08 }, 0.48);
+            window.__timelines["s2"] = tl;
+          })();
+        </script>
+      </section>
+
+      <section id="s3" class="scene clip layout-commercial"
+               data-composition-id="s3" data-start="16"
+               data-duration="8" data-label="Three packs existed while technical acceptance remained open">
+        <div class="slide-shell">
+          <div class="slide-chrome">
+          <span class="slide-count">03 / 09</span>
+        </div>
+          <h1 class="slide-title hf-animate">Three packs existed while technical acceptance remained open</h1>
+          <div class="slide-content"><div class="commercial-map">
+          <div class="commercial-side verified-side hf-animate"><span>Verified</span><ul><li>At September 1: three nontechnical report packs existed</li><li>The source recorded private repair setup as accepted</li></ul></div>
+          <div class="commercial-side unknown-side hf-animate"><span>Unknown</span><ul><li>Complete repair-program acceptance in that snapshot</li><li>Accepted real-agent scenarios</li><li>Final integrated conformance</li><li>Final technical report and complete collection</li></ul></div>
+        </div>
+        <div class="slide-boundary hf-animate"><strong>Boundary</strong><span>This dated record does not assert current work activity or final completion</span></div></div>
+          <div class="footer-spacer" aria-hidden="true"></div>
+        </div>
+        <script>
+          (function () {
+            window.__timelines = window.__timelines || {};
+            var tl = gsap.timeline({ paused: true });
+            tl.fromTo("#s3 .slide-title",
+              { opacity: 0, y: 24, clipPath: "inset(0 0 100% 0)" },
+              { opacity: 1, y: 0, clipPath: "inset(0 0 0% 0)", duration: 0.65, ease: "expo.out" }, 0.08);
+            tl.fromTo("#s3 .commercial-side",
+              { opacity: 0, y: 30, scale: 0.97 },
+              { opacity: 1, y: 0, scale: 1, duration: 0.58, ease: "power3.out", stagger: 0.09 }, 0.22);
+            tl.fromTo("#s3 .slide-boundary",
+              { opacity: 0, y: 18 },
+              { opacity: 1, y: 0, duration: 0.5, ease: "power3.out", stagger: 0.08 }, 0.48);
+            window.__timelines["s3"] = tl;
+          })();
+        </script>
+      </section>
+
+      <section id="s4" class="scene clip layout-flow"
+               data-composition-id="s4" data-start="24"
+               data-duration="8" data-label="The recorded delivery sequence followed evidence dependencies">
+        <div class="slide-shell">
+          <div class="slide-chrome">
+          <span class="slide-count">04 / 09</span>
+        </div>
+          <h1 class="slide-title hf-animate">The recorded delivery sequence followed evidence dependencies</h1>
+          <div class="slide-content"><div class="flow-map"><div class="flow-node hf-animate">
+              <span class="flow-index">01</span>
+              <strong>Reports</strong>
+              <p>Three existing nontechnical packs</p>
+            </div><div class="flow-node hf-animate">
+              <span class="flow-index">02</span>
+              <strong>Private repairs</strong>
+              <p>Component improvements and their evidence</p>
+            </div><div class="flow-node hf-animate">
+              <span class="flow-index">03</span>
+              <strong>Acceptance</strong>
+              <p>Real-agent scenarios and final integrated conformance</p>
+            </div><div class="flow-node hf-animate">
+              <span class="flow-index">04</span>
+              <strong>Package review</strong>
+              <p>Exact changes, tests and provenance</p>
+            </div><div class="flow-node hf-animate">
+              <span class="flow-index">05</span>
+              <strong>Reconciliation</strong>
+              <p>What changed, what passed and what remained limited</p>
+            </div><div class="flow-node hf-animate">
+              <span class="flow-index">06</span>
+              <strong>Final collection</strong>
+              <p>Technical report, presentation and completed index</p>
+            </div></div></div>
+          <div class="footer-spacer" aria-hidden="true"></div>
+        </div>
+        <script>
+          (function () {
+            window.__timelines = window.__timelines || {};
+            var tl = gsap.timeline({ paused: true });
+            tl.fromTo("#s4 .slide-title",
+              { opacity: 0, y: 24, clipPath: "inset(0 0 100% 0)" },
+              { opacity: 1, y: 0, clipPath: "inset(0 0 0% 0)", duration: 0.65, ease: "expo.out" }, 0.08);
+            tl.fromTo("#s4 .flow-node",
+              { opacity: 0, y: 30, scale: 0.97 },
+              { opacity: 1, y: 0, scale: 1, duration: 0.58, ease: "power3.out", stagger: 0.09 }, 0.22);
+            tl.fromTo("#s4 .flow-node:last-child",
+              { opacity: 0, y: 18 },
+              { opacity: 1, y: 0, duration: 0.5, ease: "power3.out", stagger: 0.08 }, 0.48);
+            window.__timelines["s4"] = tl;
+          })();
+        </script>
+      </section>
+
+      <section id="s5" class="scene clip layout-limits"
+               data-composition-id="s5" data-start="32"
+               data-duration="8" data-label="Each accepted stage would support a different readiness claim">
+        <div class="slide-shell">
+          <div class="slide-chrome">
+          <span class="slide-count">05 / 09</span>
+        </div>
+          <h1 class="slide-title hf-animate">Each accepted stage would support a different readiness claim</h1>
+          <div class="slide-content"><div class="limits-map"><div class="limit-row hf-animate">
+              <strong>Reading material</strong>
+              <span>Three nontechnical packs in the dated snapshot</span>
+            </div><div class="limit-row hf-animate">
+              <strong>Component review</strong>
+              <span>Exact private changes and their scoped tests</span>
+            </div><div class="limit-row hf-animate">
+              <strong>Integrated review</strong>
+              <span>Real-agent and final conformance evidence still required</span>
+            </div><div class="limit-row hf-animate">
+              <strong>Contribution review</strong>
+              <span>Exact package, diff, tests and provenance</span>
+            </div><div class="limit-row hf-animate">
+              <strong>Final collection</strong>
+              <span>Four reports and decks only after technical acceptance</span>
+            </div><div class="limit-row hf-animate">
+              <strong>External use</strong>
+              <span>A separate decision; private acceptance is insufficient</span>
+            </div></div></div>
+          <div class="footer-spacer" aria-hidden="true"></div>
+        </div>
+        <script>
+          (function () {
+            window.__timelines = window.__timelines || {};
+            var tl = gsap.timeline({ paused: true });
+            tl.fromTo("#s5 .slide-title",
+              { opacity: 0, y: 24, clipPath: "inset(0 0 100% 0)" },
+              { opacity: 1, y: 0, clipPath: "inset(0 0 0% 0)", duration: 0.65, ease: "expo.out" }, 0.08);
+            tl.fromTo("#s5 .limit-row",
+              { opacity: 0, y: 30, scale: 0.97 },
+              { opacity: 1, y: 0, scale: 1, duration: 0.58, ease: "power3.out", stagger: 0.09 }, 0.22);
+            tl.fromTo("#s5 .limit-row:last-child",
+              { opacity: 0, y: 18 },
+              { opacity: 1, y: 0, duration: 0.5, ease: "power3.out", stagger: 0.08 }, 0.48);
+            window.__timelines["s5"] = tl;
+          })();
+        </script>
+      </section>
+
+      <section id="s6" class="scene clip layout-limits"
+               data-composition-id="s6" data-start="40"
+               data-duration="8" data-label="The snapshot named the evidence still required">
+        <div class="slide-shell">
+          <div class="slide-chrome">
+          <span class="slide-count">06 / 09</span>
+        </div>
+          <h1 class="slide-title hf-animate">The snapshot named the evidence still required</h1>
+          <div class="slide-content"><div class="limits-map"><div class="limit-row hf-animate">
+              <strong>Repair results</strong>
+              <span>Accepted component changes with their test scope</span>
+            </div><div class="limit-row hf-animate">
+              <strong>Real-agent evidence</strong>
+              <span>Acceptance of the planned seventeen scenarios</span>
+            </div><div class="limit-row hf-animate">
+              <strong>Conformance</strong>
+              <span>Final integrated results after the required scenario work</span>
+            </div><div class="limit-row hf-animate">
+              <strong>Package review</strong>
+              <span>Exact contribution packages for review</span>
+            </div><div class="limit-row hf-animate">
+              <strong>Reconciliation</strong>
+              <span>Changes, acceptance state and remaining limits</span>
+            </div><div class="limit-row hf-animate">
+              <strong>Final reporting</strong>
+              <span>Technical report, presentation and completed index</span>
+            </div></div></div>
+          <div class="footer-spacer" aria-hidden="true"></div>
+        </div>
+        <script>
+          (function () {
+            window.__timelines = window.__timelines || {};
+            var tl = gsap.timeline({ paused: true });
+            tl.fromTo("#s6 .slide-title",
+              { opacity: 0, y: 24, clipPath: "inset(0 0 100% 0)" },
+              { opacity: 1, y: 0, clipPath: "inset(0 0 0% 0)", duration: 0.65, ease: "expo.out" }, 0.08);
+            tl.fromTo("#s6 .limit-row",
+              { opacity: 0, y: 30, scale: 0.97 },
+              { opacity: 1, y: 0, scale: 1, duration: 0.58, ease: "power3.out", stagger: 0.09 }, 0.22);
+            tl.fromTo("#s6 .limit-row:last-child",
+              { opacity: 0, y: 18 },
+              { opacity: 1, y: 0, duration: 0.5, ease: "power3.out", stagger: 0.08 }, 0.48);
+            window.__timelines["s6"] = tl;
+          })();
+        </script>
+      </section>
+
+      <section id="s7" class="scene clip layout-questions"
+               data-composition-id="s7" data-start="48"
+               data-duration="8" data-label="A review decision must match the evidence it governs">
+        <div class="slide-shell">
+          <div class="slide-chrome">
+          <span class="slide-count">07 / 09</span>
+        </div>
+          <h1 class="slide-title hf-animate">A review decision must match the evidence it governs</h1>
+          <div class="slide-content"><div class="proof-map"><div class="proof-column hf-animate">
+              <span>01</span>
+              <strong>Component scope</strong>
+              <p>Does the change satisfy its named checks?</p>
+            </div><div class="proof-column hf-animate">
+              <span>02</span>
+              <strong>Integrated scope</strong>
+              <p>Does the combined workflow pass the required scenarios?</p>
+            </div><div class="proof-column hf-animate">
+              <span>03</span>
+              <strong>Contribution scope</strong>
+              <p>Is the exact package ready for a separate submission decision?</p>
+            </div></div>
+        <div class="other-edges hf-animate"><strong>Other unresolved edges</strong><span>Private acceptance does not establish public release, production deployment or independent security review</span></div></div>
+          <div class="footer-spacer" aria-hidden="true"></div>
+        </div>
+        <script>
+          (function () {
+            window.__timelines = window.__timelines || {};
+            var tl = gsap.timeline({ paused: true });
+            tl.fromTo("#s7 .slide-title",
+              { opacity: 0, y: 24, clipPath: "inset(0 0 100% 0)" },
+              { opacity: 1, y: 0, clipPath: "inset(0 0 0% 0)", duration: 0.65, ease: "expo.out" }, 0.08);
+            tl.fromTo("#s7 .proof-column",
+              { opacity: 0, y: 30, scale: 0.97 },
+              { opacity: 1, y: 0, scale: 1, duration: 0.58, ease: "power3.out", stagger: 0.09 }, 0.22);
+            tl.fromTo("#s7 .other-edges",
+              { opacity: 0, y: 18 },
+              { opacity: 1, y: 0, duration: 0.5, ease: "power3.out", stagger: 0.08 }, 0.48);
+            window.__timelines["s7"] = tl;
+          })();
+        </script>
+      </section>
+
+      <section id="s8" class="scene clip layout-position"
+               data-composition-id="s8" data-start="56"
+               data-duration="8" data-label="The final technical collection is conditional and incomplete">
+        <div class="slide-shell">
+          <div class="slide-chrome">
+          <span class="slide-count">08 / 09</span>
+        </div>
+          <h1 class="slide-title hf-animate">The final technical collection is conditional and incomplete</h1>
+          <div class="slide-content"><div class="position-map">
+          <div class="position-column safe-column hf-animate"><span>Conditional future</span><ul><li>Four reports and decks only when the technical pack is accepted</li><li>Integrated and real-agent evidence only after the required runs pass</li><li>A final account of changes and limits after reconciliation</li><li>Exact contribution candidates subject to separate review</li></ul></div>
+          <div class="position-column stop-column hf-animate"><span>Do not say</span><ul><li>Production-ready, externally reviewed or proven demand</li><li>Private packages approved for submission, merged, released or deployed</li><li>No further defects or a committed delivery date</li></ul></div>
+        </div>
+        <div class="partner-question hf-animate"><strong>Research question</strong><span>What is still missing? Accepted technical evidence and the final technical pack</span></div></div>
+          <div class="footer-spacer" aria-hidden="true"></div>
+        </div>
+        <script>
+          (function () {
+            window.__timelines = window.__timelines || {};
+            var tl = gsap.timeline({ paused: true });
+            tl.fromTo("#s8 .slide-title",
+              { opacity: 0, y: 24, clipPath: "inset(0 0 100% 0)" },
+              { opacity: 1, y: 0, clipPath: "inset(0 0 0% 0)", duration: 0.65, ease: "expo.out" }, 0.08);
+            tl.fromTo("#s8 .position-column",
+              { opacity: 0, y: 30, scale: 0.97 },
+              { opacity: 1, y: 0, scale: 1, duration: 0.58, ease: "power3.out", stagger: 0.09 }, 0.22);
+            tl.fromTo("#s8 .partner-question",
+              { opacity: 0, y: 18 },
+              { opacity: 1, y: 0, duration: 0.5, ease: "power3.out", stagger: 0.08 }, 0.48);
+            window.__timelines["s8"] = tl;
+          })();
+        </script>
+      </section>
+
+      <section id="s9" class="scene clip layout-resources"
+               data-composition-id="s9" data-start="64"
+               data-duration="8" data-label="The public copies link each summary to dated evidence">
+        <div class="slide-shell">
+          <div class="slide-chrome">
+          <span class="slide-count">09 / 09</span>
+        </div>
+          <h1 class="slide-title hf-animate">The public copies link each summary to dated evidence</h1>
+          <div class="slide-content"><div class="resource-list"><div class="resource-row hf-animate">
+              <strong>Snapshot</strong>
+              <span>EVIDENCE.md#slide-1</span>
+            </div><div class="resource-row hf-animate">
+              <strong>Delivery sequence</strong>
+              <span>EVIDENCE.md#slide-4</span>
+            </div><div class="resource-row hf-animate">
+              <strong>Readiness by stage</strong>
+              <span>EVIDENCE.md#slide-5</span>
+            </div><div class="resource-row hf-animate">
+              <strong>Required evidence</strong>
+              <span>EVIDENCE.md#slide-6</span>
+            </div><div class="resource-row hf-animate">
+              <strong>Review scope</strong>
+              <span>EVIDENCE.md#slide-7</span>
+            </div><div class="resource-row hf-animate">
+              <strong>Conditional final pack</strong>
+              <span>EVIDENCE.md#slide-8</span>
+            </div></div>
+        <div class="next-action hf-animate"><strong>Next action</strong><span>Read the dated summaries; do not treat this historical deck as a current technical acceptance record</span></div></div>
+          <div class="footer-spacer" aria-hidden="true"></div>
+        </div>
+        <script>
+          (function () {
+            window.__timelines = window.__timelines || {};
+            var tl = gsap.timeline({ paused: true });
+            tl.fromTo("#s9 .slide-title",
+              { opacity: 0, y: 24, clipPath: "inset(0 0 100% 0)" },
+              { opacity: 1, y: 0, clipPath: "inset(0 0 0% 0)", duration: 0.65, ease: "expo.out" }, 0.08);
+            tl.fromTo("#s9 .resource-row",
+              { opacity: 0, y: 30, scale: 0.97 },
+              { opacity: 1, y: 0, scale: 1, duration: 0.58, ease: "power3.out", stagger: 0.09 }, 0.22);
+            tl.fromTo("#s9 .next-action",
+              { opacity: 0, y: 18 },
+              { opacity: 1, y: 0, duration: 0.5, ease: "power3.out", stagger: 0.08 }, 0.48);
+            window.__timelines["s9"] = tl;
+          })();
+        </script>
+      </section>
+      <div class="deck-footer root-footer"><span></span><strong>MPAS</strong><em>Historical edition · 2026-09-01 · Public candidate</em></div>
+      <script>
+        (function () {
+          window.__timelines = window.__timelines || {};
+          var tl = gsap.timeline({ paused: true });
+          tl.to({}, { duration: 72 }, 0);
+          window.__timelines["main"] = tl;
+        })();
+      </script>
+    </main>
+  </body>
+</html>
