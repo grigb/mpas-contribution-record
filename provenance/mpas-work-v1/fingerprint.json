@@ -1,0 +1,27 @@
+{
+  "schema": "mpas.contribution-fingerprint.v1",
+  "record_id": "mpas-work-v1",
+  "author": "Grig Bilham",
+  "record_title": "MPAS contribution record",
+  "prepared_on": "2026-09-17",
+  "private_record_manifest": {
+    "algorithm": "sha256",
+    "digest": "775f35cbc8966773a8dfbd6fb243b55f281f8128eec938413199ec02b2aed0e5",
+    "status": "frozen-and-byte-verified",
+    "preserved_record_id": "2026-09-17-mpas-work-v1"
+  },
+  "independent_timestamp": {
+    "status": "VERIFIED_WITH_PROVIDER",
+    "last_checked_at": "2026-09-18T18:08:47.906Z",
+    "verified_at": "2026-09-18T18:08:47.906Z",
+    "bitcoin_block_height": 967477,
+    "bitcoin_block_timestamp": "2026-09-17T23:22:28Z",
+    "proof_sha256": "c57058e0c3910254946486745c1074b4576110320f56f0b0fb6087b6fd7b6714",
+    "established_no_later_than": "2026-09-17T23:22:28Z",
+    "verification_method": "Official OpenTimestamps.verify; one upgrade and verification attempt",
+    "block_data_provider": "https://blockstream.info/api",
+    "limitation": "Explorer-backed verification assumes provider block data is valid; no local full-node consensus validation."
+  },
+  "dependency": "Exact-payload publication review before public release.",
+  "limits": "This fingerprint does not disclose private files, establish authorship or rights, or prove technical completion. The preparation date is not an independently verified timestamp."
+}
